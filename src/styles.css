@@ -520,7 +520,10 @@ h3 {
   text-transform: uppercase;
   color: #fff3dd;
   text-shadow: 0 1px 3px #000;
-  opacity: 0.8;
+  opacity: 0.85;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(20, 12, 8, 0.45);
 }
 
 .course-overlay {

@@ -21,13 +21,14 @@ import {
   type RaceSetup,
   type RaceStatus,
 } from '../game/race';
-import { GRAND_PRIX_TRACK, trackForFamily } from '../game/tracks';
+import type { Track } from '../game/tracks';
 import type { Fact, Launch } from '../game/types';
 import { formatTime, launchTitle } from './labels';
 
 interface Props {
   launch: Launch;
   setup: RaceSetup;
+  track: Track;
   onFinish: (result: RaceResult) => void;
   onQuit: () => void;
 }
@@ -107,7 +108,7 @@ function endBanner(status: RaceStatus, setup: RaceSetup, speakers: Character[]):
   }
 }
 
-export function RaceScreen({ launch, setup, onFinish, onQuit }: Props) {
+export function RaceScreen({ launch, setup, track, onFinish, onQuit }: Props) {
   const [race, setRace] = useState(() => createRace(setup));
   const [phase, setPhase] = useState<'countdown' | 'racing' | 'done'>('countdown');
   const [count, setCount] = useState(3);
@@ -296,7 +297,6 @@ export function RaceScreen({ launch, setup, onFinish, onQuit }: Props) {
   const shownSwapped = reveal?.swapped ?? swapped;
   const inputReveal = reveal ? { correct: reveal.fact.answer, given: reveal.given } : null;
 
-  const track = launch.kind === 'grandprix' ? GRAND_PRIX_TRACK : trackForFamily(launch.family);
   const { title, subtitle } = launchTitle(launch);
 
   const racers: MapRacer[] = [

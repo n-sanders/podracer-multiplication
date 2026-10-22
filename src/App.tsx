@@ -3,6 +3,7 @@ import { setMuted, sfx } from './audio/sound';
 import { applyResult, defaultSave, getFamily, loadSave, writeSave, type ProgressEvent, type RaceResult, type SaveData } from './game/progress';
 import type { RaceSetup } from './game/race';
 import { buildFamilySetup, buildGrandPrixSetup } from './game/setups';
+import { trackFor, type Track } from './game/tracks';
 import { RANK_ORDER, type FamilyActivity, type Launch, type Rank } from './game/types';
 import { GrandPrixSetup } from './screens/GrandPrixSetup';
 import { Hangar } from './screens/Hangar';
@@ -12,15 +13,19 @@ import { Results } from './screens/Results';
 type View =
   | { name: 'hangar' }
   | { name: 'gp-setup' }
-  | { name: 'race'; launch: Launch; setup: RaceSetup; runId: number; testRun: boolean }
+  | { name: 'race'; launch: Launch; setup: RaceSetup; track: Track; runId: number; testRun: boolean }
   | { name: 'results'; launch: Launch; result: RaceResult; events: ProgressEvent[] };
 
 const TEST_TOOLS_ENABLED = import.meta.env.DEV || new URLSearchParams(window.location.search).has('test');
 
-function buildSetup(launch: Launch, save: SaveData, rankOverride: Rank | null): RaceSetup {
+function launchRank(launch: Launch, save: SaveData, rankOverride: Rank | null): Rank {
+  return launch.kind === 'grandprix' ? 'S' : rankOverride ?? getFamily(save, launch.family).rank;
+}
+
+function buildSetup(launch: Launch, rank: Rank): RaceSetup {
   return launch.kind === 'grandprix'
     ? buildGrandPrixSetup(launch.families)
-    : buildFamilySetup(launch.activity, launch.family, rankOverride ?? getFamily(save, launch.family).rank);
+    : buildFamilySetup(launch.activity, launch.family, rank);
 }
 
 export function App() {
@@ -37,10 +42,12 @@ export function App() {
 
   const launch = (l: Launch) => {
     sfx.click();
+    const rank = launchRank(l, save, rankOverride);
     setView({
       name: 'race',
       launch: l,
-      setup: buildSetup(l, save, rankOverride),
+      setup: buildSetup(l, rank),
+      track: trackFor(l, rank),
       runId: Date.now(),
       testRun: rankOverride !== null,
     });
@@ -109,6 +116,7 @@ export function App() {
             key={view.runId}
             launch={view.launch}
             setup={view.setup}
+            track={view.track}
             onQuit={toHangar}
             onFinish={(result) => {
               const out = applyResult(save, view.launch, result);
